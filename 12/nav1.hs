@@ -1,5 +1,4 @@
---import Dict exposing (Dict)
-import Data.Map as Map
+import Text.Printf
 
 --users : Dict String User
 turnleft :: Char -> Char
@@ -24,20 +23,33 @@ movevec d =
         'S' -> (0, -1)
         'W' -> (-1, 0)
 
--- main    = interact (unlines . map show . lines)
 
 -- count s = show (length s) ++ "\n"
 
+-- main    = interact (unlines . map show . lines)
+-- main = interact print lines
 -- main = print $ navturn 'E' 'R' 180
-main = print $ movecomplete 0 0 'E' ["R180", "S2", "F10"]
+-- main = print $ movecomplete 0 0 'E' ["R180", "S2", "F10"]
 -- main = print $ tail ["oans", "zwoa", "dra"]
 
-movecomplete x y dir [] = (x, y)
+main = do  
+    inp <- getContents
+    let finalpos = movecomplete 0 0 'E' (lines inp)
+    
+    putStr "finalpos: "
+    print finalpos
+    putStr "manhattan dist: "
+    print $ manhattan finalpos
+
+manhattan pos = (abs a) + (abs b)
+    where
+        (a, b) = pos
+
 movecomplete x y dir cmds 
     | length remaining_cmds == 0  = (xnew, ynew)
     | otherwise                   = movecomplete xnew ynew dirnew remaining_cmds
     where 
-        (xnew, ynew, dirnew, remaining_cmds) = moveme x y dir cmds
+        (xnew, ynew, dirnew, remaining_cmds) = moveonce x y dir cmds
 
 navturn olddir dir degrees
     | degrees > 90 && dir == 'L' = navturn (turnleft olddir) dir (degrees - 90)
@@ -45,16 +57,15 @@ navturn olddir dir degrees
     | degrees == 90 && dir == 'L' = turnleft olddir
     | degrees == 90 && dir == 'R' = turnright olddir
 
-moveme :: Int -> Int -> Char -> [String] -> (Int, Int, Char, [String])
-moveme x y dir cmds = (xnew, ynew, dirnew, leftover_cmds)
+moveonce :: Int -> Int -> Char -> [String] -> (Int, Int, Char, [String])
+moveonce x y dir cmds = (xnew, ynew, dirnew, leftover_cmds)
     where
         nav = head cmds
         cmd = head nav
         amount = read (tail nav) :: Int
 
         dirnew 
-            | cmd == 'L' = navturn dir cmd amount
-            | cmd == 'R' = navturn dir cmd amount
+            | cmd `elem` "LR" = navturn dir cmd amount
             | otherwise  = dir
 
         move 
