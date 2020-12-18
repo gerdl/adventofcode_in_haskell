@@ -14,26 +14,29 @@ main = do
     handle <- openFile "18/data_in.txt" ReadMode
     contents <- hGetContents handle
     
-    -- print $ do_parsing contents
+    print $ do_parsing contents
 
-    -- print $ c2int '5'
-    print $ c2op '+' 5 37
-    -- print $ c2int ')'  -- test raising errors!
-    -- print $ eval_strange_math "1+2*3+4*5+6"
-    -- print $ eval_strange_math "1+2*3+4*(5+6)"
+    let inp = do_parsing contents
+    let res_list = map eval_strange_math inp
+
+    print $ res_list
 
     print $ ("Hello " ++ ['!'])   -- join character from right does not work with :
+    print $ ("Sum of results: " ++ show (sum res_list))
 
     --print $ extract_parenthesis_fromleft_rec "(" "ga(t)ta(ca))foo(b00)ook" 1
     --print $ extract_parenthesis_fromleft "(ga(t)ta(ca))foo(b00)ook"
     --print $ strange_reverse "(foo)wgo(bar)"
     --print $ extract_parenthesis_fromright "(foo)wgo(bar)"
     --print $ extract_parenthesis_fromright "1+2*3+4*(5+6)"
+    
+    {-
     print $ extract_parenthesis_fromright "((2+4*9)*(6+9*8+6)+6)"
     print $ eval_strange_math "1+2*(3+4)*5+6"
     print $ eval_strange_math "1+(2*3)+(4*(5+6))"
     print $ eval_strange_math "5*9*(7*3*3+9*3+(8+6*4))"
     print $ eval_strange_math "((2+4*9)*(6+9*8+6)+6)+2+4*2"
+    -}
 
     hClose handle
 
