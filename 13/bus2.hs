@@ -36,7 +36,7 @@ naive_times = [(t, all_bus_corret present_buslines t) |
 
 -- smarter, iterative approach:
 solution_time (bushead:bustail)
-    | bustail == []    = bid_next - off_next 
+    | bustail == []    = bid_next - off_next        -- empty tail: recursion start
     | otherwise        = t_next
     where 
         t_tail = solution_time bustail
