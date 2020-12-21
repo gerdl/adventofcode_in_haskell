@@ -30,9 +30,15 @@ import Debug.Trace (trace)
 -- main = print $ simplify_expr_4_op (EMOp '+') (EMLit 5)
 -- main = print $ simplify_expr_4_op (EMOp '+') (EMExpr [EMLit 5, EMOp '*', EMLit 7, EMOp '+', EMLit 9])
 -- main = print $ simplify_expr_4_op (EMOp '*') (EMExpr [EMLit 5, EMOp '*', EMLit 7, EMOp '+', EMLit 9])
--- example = parseStringExpression "2+(3+(4+5))+(6+2)+2"
-example = parseStringExpression "2+3+(4+5+6+2+2)"
-main = print $ simplify_expr_4_op (EMOp '+') (EMExpr example)
+example = parseStringExpression "2+(3+(4+5))+(6+2)+2"
+--example = parseStringExpression "2+3+(4+5+6+2+2)"
+--example = parseStringExpression "1+(2+3)"
+
+res = simplify_expr_4_op (EMOp '+') (EMExpr example)
+
+main = do
+    print example
+    print $ "result == " ++ show res
 --main = print $ example
 
 --            A,+,B,*,C,+,D
@@ -45,12 +51,12 @@ main = print $ simplify_expr_4_op (EMOp '+') (EMExpr example)
 simplify_expr_4_op :: ExprMem -> ExprMem -> ExprMem
 simplify_expr_4_op _ (EMLit v) = EMLit v
 simplify_expr_4_op op (EMExpr [EMLit lit]) = EMLit lit
---simplify_expr_4_op op (EMExpr [em]) = simplify_expr_4_op op em    -- not sure if this is a good idea...
+simplify_expr_4_op op (EMExpr [EMExpr em]) = simplify_expr_4_op op (EMExpr em)    -- solve brackets
 simplify_expr_4_op op (EMExpr expr) = trace ("remaining=" ++ show remaining ++ " from " ++ show expr ++ " op_result=" ++ show op_result ++ " applicable=" ++ show dbg_applicable) 
                                       $ remaining
     where
-        l       = head expr
-        myop    = head (tail expr)
+        l       = trace ("Hi l: " ++ show expr) head expr
+        myop    = trace ("Looking for Tail!") head (tail expr)
         r       = head (tail (tail expr))
         rest    = tail (tail (tail expr))
         l_ex    = simplify_expr_4_op op l
@@ -64,13 +70,14 @@ simplify_expr_4_op op (EMExpr expr) = trace ("remaining=" ++ show remaining ++ "
 
         -- recurse
         remaining 
-            | op_applicable l r   = simplify_expr_4_op op $ EMExpr (op_result ++ rest)
+            | op_applicable l r   = trace("Computing remaining: " ++ show (op_applicable l r))
+                                    simplify_expr_4_op op $ EMExpr (op_result ++ rest)
             | otherwise           = join_EMExpr  (EMExpr ([l] ++ [myop]))  $ simplify_expr_4_op op (EMExpr (tail (tail expr))) 
 
 use_op :: ExprMem -> ExprMem -> ExprMem -> [ExprMem]
 use_op (EMLit l) (EMOp '+') (EMLit r) = [EMLit (l+r)]
 use_op (EMLit l) (EMOp '*') (EMLit r) = [EMLit (l*r)]
--- use_op l op r = [l, op, r]
+use_op l op r = error ("Can't use op: " ++ show l ++ show op ++ show r)
 
 join_EMExpr (EMExpr ea) (EMExpr eb) = EMExpr (ea ++ eb)
 join_EMExpr (EMExpr ea) (EMLit lit) = EMExpr (ea ++ [EMLit lit])
