@@ -2,6 +2,7 @@ import System.IO( openFile, hClose, hGetContents )
 import System.IO( IOMode( ReadMode ) )
 import Data.List.Split (splitOn, splitOneOf)
 import Data.Char (isNumber, ord)
+import Data.List (transpose)
 
 -- switch between trace logging and no verbose output
 --trace _ fn = fn 
@@ -16,7 +17,11 @@ main = do
 
     print $ tileset
 
-    printTile (tileset !! 1)
+    printTile (tileset !! 0)
+
+    let ptile = tile2PuzzleTile (tileset !! 0)
+
+    print ptile
 
     hClose handle
 
@@ -54,3 +59,36 @@ readMultipleTiles inp = tilelist
         firstsplit = splitOn "Tile" inp
         tilelist = [readTile ("Tile" ++ ttext) | ttext <- firstsplit,
                                                  length ttext > 0]
+
+tileOnTopOf ta tb = lastline_a == firstline_b
+    where
+        lastline_a = last (image ta)
+        firstline_b = head (image tb)
+
+
+--  How to do the tile assembly
+--   See each tile connection as a hash or int value (bit pattern)
+--   Jump along hash collisions?
+--  Flip & Turn -> 8 Configurations
+--  Howto?
+--   a) Start arbitrary card/config
+--   b) Find top left from here or assemble everything in direction right/bottom from here
+
+data PuzzleTile = PuzzleTile {
+    pnum :: Int,
+    l :: String,
+    r :: String,
+    t :: String,
+    b :: String,
+    ori :: Int}
+    deriving (Eq, Show, Read)
+
+tile2PuzzleTile tile = PuzzleTile pnum l r t b ori
+    where
+        t = head (image tile)
+        b = last (image tile)
+        l = head (transpose (image tile))
+        r = last (transpose (image tile))
+        ori = 0
+        pnum = num tile
+    
