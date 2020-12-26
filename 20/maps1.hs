@@ -3,6 +3,7 @@ import System.IO( IOMode( ReadMode ) )
 import Data.List.Split (splitOn, splitOneOf)
 import Data.Char (isNumber, ord)
 import Data.List (transpose)
+import Data.Map.Strict (fromListWith)
 
 -- switch between trace logging and no verbose output
 --trace _ fn = fn 
@@ -10,7 +11,8 @@ import Debug.Trace (trace)
 
 
 main = do  
-    handle <- openFile "20/demo_1.in.txt" ReadMode
+    handle <- openFile "20/data_in.txt" ReadMode
+    -- handle <- openFile "20/demo_1.in.txt" ReadMode
     contents <- hGetContents handle
     
     let tileset = readMultipleTiles contents
@@ -21,7 +23,28 @@ main = do
 
     let ptile = tile2PuzzleTile (tileset !! 0)
 
+    let ptileset = [tile2PuzzleTile tile | tile <- tileset]
+    let borderset = [(top, 1) | pt <- ptileset,
+                             turn <- [0..3],
+                             flip <- [True, False],
+                             let mytile 
+                                    | flip       = flip_ptile $ turnright_ptile pt turn
+                                    | otherwise  = turnright_ptile pt turn,
+                             let top = (t mytile),
+                             let mynum = pnum pt]
+
+    let counted_borders = fromListWith (+) borderset
+
+    {-
     print ptile
+    print $ turnright_ptile ptile 1
+    print $ turnright_ptile ptile 2
+    print $ turnright_ptile ptile 3
+    print $ flip_ptile (ptile)
+    -}
+
+    -- print $ borderset
+    print counted_borders
 
     hClose handle
 
@@ -83,6 +106,7 @@ data PuzzleTile = PuzzleTile {
     ori :: Int}
     deriving (Eq, Show, Read)
 
+
 tile2PuzzleTile tile = PuzzleTile pnum l r t b ori
     where
         t = head (image tile)
@@ -91,4 +115,24 @@ tile2PuzzleTile tile = PuzzleTile pnum l r t b ori
         r = last (transpose (image tile))
         ori = 0
         pnum = num tile
-    
+
+
+turnright_ptile orig_ptile 0     = orig_ptile    
+turnright_ptile orig_ptile turns = PuzzleTile pnum' l' r' t' b' ori'
+    where
+        turned_tile = turnright_ptile orig_ptile (turns - 1)
+        l' = b turned_tile
+        t' = reverse (l turned_tile)
+        r' = t turned_tile
+        b' = reverse (r turned_tile)
+        ori' = (ori turned_tile) + 1
+        pnum' = pnum turned_tile
+
+flip_ptile orig_ptile = PuzzleTile pnum' l' r' t' b' ori'
+    where
+        l' = l orig_ptile
+        t' = reverse (t orig_ptile)
+        r' = r orig_ptile
+        b' = reverse (b orig_ptile)
+        ori' = (ori orig_ptile) + 100
+        pnum' = pnum orig_ptile
